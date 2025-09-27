@@ -5,7 +5,7 @@ import "./FormResponse.css";
 
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwIr_dfvSNCXuamzu1ieVzA3Swzee1jtFhgFF97hZwQXBVGeV-GQMgvJlgT0Qg77OWm/exec";
 const SECRET_TOKEN = "my_secret_12345";
-const MAX_GUESTS = 15;
+const MAX_GUESTS = 10;
 
 const OPTION_TEXTS = {
     side: {
@@ -22,13 +22,13 @@ export default function FormResponse() {
     const [name, setName] = useState("");
     const [side, setSide] = useState("wife");
     const [attending, setAttending] = useState("yes");
-    const [guests, setGuests] = useState(1);
+    // guests храним как строку, чтобы не терять ввод пользователя
+    const [guests, setGuests] = useState("1");
     const [status, setStatus] = useState(null);
     const [formSubmitted, setFormSubmitted] = useState(false);
     const [nameError, setNameError] = useState(false);
     const [nameTouched, setNameTouched] = useState(false);
 
-    // NEW: guests error and touched
     const [guestsError, setGuestsError] = useState(false);
     const [guestsTouched, setGuestsTouched] = useState(false);
 
@@ -36,7 +36,6 @@ export default function FormResponse() {
     const formRef = useRef(null);
     const timeoutRef = useRef(null);
 
-    // Validate name on change
     const validateName = (value) => {
         if (!value.trim()) {
             setNameError("Անունը պարտադիր է");
@@ -53,9 +52,7 @@ export default function FormResponse() {
         }
     };
 
-    // NEW: validate guests
     const validateGuests = (value) => {
-        // Only validate when attending === 'yes'
         if (attending !== "yes") {
             setGuestsError(false);
             return true;
@@ -66,6 +63,7 @@ export default function FormResponse() {
             return false;
         }
 
+        // числовая проверка
         const n = Number(value);
         if (Number.isNaN(n) || !Number.isInteger(n)) {
             setGuestsError("Հյուրերի թիվը պետք է լինի ամբողջ թիվ");
@@ -78,7 +76,8 @@ export default function FormResponse() {
         }
 
         if (n > MAX_GUESTS) {
-            setGuestsError(`Արեգագույն թույլատրված հյուրերի քանակը — ${MAX_GUESTS}`);
+            // вот сообщение, которое вы хотели
+            setGuestsError(`Առավելագույն հյուրերի քանակը — ${MAX_GUESTS}`);
             return false;
         }
 
@@ -99,31 +98,30 @@ export default function FormResponse() {
         validateName(name);
     };
 
-    // NEW: guests change & blur handlers
+    // Не клэмпируем — сохраняем ровно то, что ввёл пользователь.
+    // Валидация запускается сразу (validateGuests), чтобы показывать ошибку без ожидания blur.
     const handleGuestsChange = (e) => {
         const v = e.target.value;
+
+        // allow empty
         if (v === "") {
             setGuests("");
+            // показываем ошибку сразу, если уже touched
             if (guestsTouched) validateGuests("");
+            else validateGuests(""); // показываем сразу по требованию
             return;
         }
 
-        const parsed = Number(v);
-        if (Number.isNaN(parsed)) return;
-
-        // Allow typing but enforce integer and bounds
-        const clamped = Math.trunc(parsed);
-        // If user tries to go above MAX_GUESTS, keep value but set error
-        setGuests(clamped);
-        if (guestsTouched) validateGuests(clamped);
-
-        // If clamped equals limit, show informational error (so user sees validation)
-        if (clamped >= MAX_GUESTS) {
-            setGuestsError(`Առավելագույնը ${MAX_GUESTS} հյուր։`);
-        } else {
-            // revalidate to clear previous errors
-            validateGuests(clamped);
+        // разрешаем только цифры
+        if (!/^\d+$/.test(v)) {
+            // игнорируем недопустимые символы
+            return;
         }
+
+        setGuests(v);
+
+        // показываем ошибку сразу при вводе
+        validateGuests(v);
     };
 
     const handleGuestsBlur = () => {
@@ -135,9 +133,7 @@ export default function FormResponse() {
         setNameTouched(true);
         setGuestsTouched(true);
 
-        // Validate name
         if (!validateName(name)) {
-            // Scroll to name input
             setTimeout(() => {
                 const nameInput = document.querySelector('input[name="fullName"]');
                 if (nameInput) {
@@ -158,9 +154,7 @@ export default function FormResponse() {
             return false;
         }
 
-        // Validate guests
         if (!validateGuests(guests)) {
-            // Scroll to guests input if present
             setTimeout(() => {
                 const guestsInput = document.querySelector('input[aria-label="guests"]');
                 if (guestsInput) {
@@ -226,7 +220,7 @@ export default function FormResponse() {
             setName("");
             setSide("wife");
             setAttending("yes");
-            setGuests(1);
+            setGuests("1");
             setNameError(false);
             setNameTouched(false);
             setGuestsError(false);
@@ -369,8 +363,8 @@ export default function FormResponse() {
                                         name="attending"
                                         checked={attending === "yes"}
                                         onChange={() => {
-                                            setAttending("yes")
-                                            setGuests(1)
+                                            setAttending("yes");
+                                            setGuests("1");
                                             setGuestsError(false);
                                         }}
                                     />{' '}
@@ -383,7 +377,7 @@ export default function FormResponse() {
                                         checked={attending === "no"}
                                         onChange={() => {
                                             setAttending("no");
-                                            setGuests(0);
+                                            setGuests("0");
                                             setGuestsError(false);
                                         }}
                                     />{' '}
@@ -399,8 +393,8 @@ export default function FormResponse() {
                                     className={`input ${guestsError ? 'input-error' : ''}`}
                                     type="number"
                                     min={0}
-                                    max={MAX_GUESTS}
                                     step={1}
+                                    // убран max={MAX_GUESTS} чтобы не было автоматического поведения со стороны браузера
                                     value={guests}
                                     onChange={handleGuestsChange}
                                     onBlur={handleGuestsBlur}
@@ -417,11 +411,6 @@ export default function FormResponse() {
                                     >
                                         {guestsError}
                                     </motion.div>
-                                )}
-                                {attending === 'yes' && !guestsError && (guests !== '' && Number(guests) >= MAX_GUESTS) && (
-                                    <div className="error-text" style={{ marginTop: 8 }}>
-                                        Դուք հասաք առավելագույն թույլատրելի ({MAX_GUESTS})։
-                                    </div>
                                 )}
                             </div>
                         }
