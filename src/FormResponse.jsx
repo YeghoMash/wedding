@@ -5,7 +5,7 @@ import "./FormResponse.css";
 
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwIr_dfvSNCXuamzu1ieVzA3Swzee1jtFhgFF97hZwQXBVGeV-GQMgvJlgT0Qg77OWm/exec";
 const SECRET_TOKEN = "my_secret_12345";
-const MAX_GUESTS = 10;
+const MAX_GUESTS = 15;
 
 const OPTION_TEXTS = {
     side: {
@@ -27,6 +27,11 @@ export default function FormResponse() {
     const [formSubmitted, setFormSubmitted] = useState(false);
     const [nameError, setNameError] = useState(false);
     const [nameTouched, setNameTouched] = useState(false);
+
+    // NEW: guests error and touched
+    const [guestsError, setGuestsError] = useState(false);
+    const [guestsTouched, setGuestsTouched] = useState(false);
+
     const iframeRef = useRef(null);
     const formRef = useRef(null);
     const timeoutRef = useRef(null);
@@ -48,6 +53,39 @@ export default function FormResponse() {
         }
     };
 
+    // NEW: validate guests
+    const validateGuests = (value) => {
+        // Only validate when attending === 'yes'
+        if (attending !== "yes") {
+            setGuestsError(false);
+            return true;
+        }
+
+        if (value === "" || value == null) {
+            setGuestsError("Խնդրում ենք մուտքագրել հյուրերի քանակը");
+            return false;
+        }
+
+        const n = Number(value);
+        if (Number.isNaN(n) || !Number.isInteger(n)) {
+            setGuestsError("Հյուրերի թիվը պետք է լինի ամբողջ թիվ");
+            return false;
+        }
+
+        if (n < 1) {
+            setGuestsError("Եթե դուք գալու եք, խնդրում ենք նշել առնվազն 1 հյուր");
+            return false;
+        }
+
+        if (n > MAX_GUESTS) {
+            setGuestsError(`Արեգագույն թույլատրված հյուրերի քանակը — ${MAX_GUESTS}`);
+            return false;
+        }
+
+        setGuestsError(false);
+        return true;
+    };
+
     const handleNameChange = (e) => {
         const value = e.target.value;
         setName(value);
@@ -61,7 +99,42 @@ export default function FormResponse() {
         validateName(name);
     };
 
+    // NEW: guests change & blur handlers
+    const handleGuestsChange = (e) => {
+        const v = e.target.value;
+        if (v === "") {
+            setGuests("");
+            if (guestsTouched) validateGuests("");
+            return;
+        }
+
+        const parsed = Number(v);
+        if (Number.isNaN(parsed)) return;
+
+        // Allow typing but enforce integer and bounds
+        const clamped = Math.trunc(parsed);
+        // If user tries to go above MAX_GUESTS, keep value but set error
+        setGuests(clamped);
+        if (guestsTouched) validateGuests(clamped);
+
+        // If clamped equals limit, show informational error (so user sees validation)
+        if (clamped >= MAX_GUESTS) {
+            setGuestsError(`Առավելագույնը ${MAX_GUESTS} հյուր։`);
+        } else {
+            // revalidate to clear previous errors
+            validateGuests(clamped);
+        }
+    };
+
+    const handleGuestsBlur = () => {
+        setGuestsTouched(true);
+        validateGuests(guests);
+    };
+
     function validate() {
+        setNameTouched(true);
+        setGuestsTouched(true);
+
         // Validate name
         if (!validateName(name)) {
             // Scroll to name input
@@ -85,17 +158,17 @@ export default function FormResponse() {
             return false;
         }
 
-        if (attending === "yes") {
-            if (guests === "" || guests == null || Number.isNaN(Number(guests))) {
-                alert("Խնդրում ենք մուտքագրել ճիշտ հյուրերի քանակը / Укажите корректное число гостей.");
-                return false;
-            }
-
-            const g = Number(guests);
-            if (!Number.isInteger(g) || g < 1 || g > MAX_GUESTS) {
-                alert(`Խնդրում ենք մուտքագրել հյուրերի թիվ՝ 1-ից ${MAX_GUESTS}-ը ներառյալ / Введите число гостей от 1 до ${MAX_GUESTS}.`);
-                return false;
-            }
+        // Validate guests
+        if (!validateGuests(guests)) {
+            // Scroll to guests input if present
+            setTimeout(() => {
+                const guestsInput = document.querySelector('input[aria-label="guests"]');
+                if (guestsInput) {
+                    guestsInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    guestsInput.focus();
+                }
+            }, 100);
+            return false;
         }
 
         return true;
@@ -104,6 +177,7 @@ export default function FormResponse() {
     const handleSubmit = (e) => {
         e.preventDefault();
         setNameTouched(true);
+        setGuestsTouched(true);
 
         if (!validate()) return;
 
@@ -155,6 +229,8 @@ export default function FormResponse() {
             setGuests(1);
             setNameError(false);
             setNameTouched(false);
+            setGuestsError(false);
+            setGuestsTouched(false);
 
             setTimeout(() => {
                 try { form.remove(); } catch (_) {}
@@ -295,6 +371,7 @@ export default function FormResponse() {
                                         onChange={() => {
                                             setAttending("yes")
                                             setGuests(1)
+                                            setGuestsError(false);
                                         }}
                                     />{' '}
                                     {OPTION_TEXTS.attending.yes}
@@ -307,6 +384,7 @@ export default function FormResponse() {
                                         onChange={() => {
                                             setAttending("no");
                                             setGuests(0);
+                                            setGuestsError(false);
                                         }}
                                     />{' '}
                                     {OPTION_TEXTS.attending.no}
@@ -318,35 +396,43 @@ export default function FormResponse() {
                             <div className="form-row">
                                 <label className="label">Հյուրերի թիվ</label>
                                 <input
-                                    className="input"
+                                    className={`input ${guestsError ? 'input-error' : ''}`}
                                     type="number"
                                     min={0}
                                     max={MAX_GUESTS}
                                     step={1}
                                     value={guests}
-                                    onChange={(e) => {
-                                        const v = e.target.value;
-                                        if (v === "") {
-                                            setGuests("");
-                                            return;
-                                        }
-                                        const n = Number(v);
-                                        if (Number.isNaN(n)) return;
-                                        setGuests(Math.max(0, Math.min(MAX_GUESTS, Math.trunc(n))));
-                                    }}
+                                    onChange={handleGuestsChange}
+                                    onBlur={handleGuestsBlur}
                                     disabled={attending !== "yes"}
                                     aria-label="guests"
                                 />
-                                {attending === 'yes' && (guests !== '' && Number(guests) < 1) && (
+                                {attending === 'yes' && guestsError && (
+                                    <motion.div
+                                        className="error-text"
+                                        initial={{ opacity: 0, y: -6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.18 }}
+                                        style={{ marginTop: 8, color: '#e74c3c', fontSize: '14px' }}
+                                    >
+                                        {guestsError}
+                                    </motion.div>
+                                )}
+                                {attending === 'yes' && !guestsError && (guests !== '' && Number(guests) >= MAX_GUESTS) && (
                                     <div className="error-text" style={{ marginTop: 8 }}>
-                                        Եթե դուք գալու եք, խնդրում ենք նշել առնվազն 1 հյուր / Укажите хотя бы 1 гостя, если вы приходите.
+                                        Դուք հասաք առավելագույն թույլատրելի ({MAX_GUESTS})։
                                     </div>
                                 )}
                             </div>
                         }
 
                         <div className="actions">
-                            <button className="btn btn-primary" type="submit" disabled={status === "sending" || (attending === 'yes' && (guests === '' || Number(guests) < 1)) || nameError}>
+                            <button className="btn btn-primary" type="submit" disabled={
+                                status === "sending" ||
+                                (attending === 'yes' && (guests === '' || Number(guests) < 1)) ||
+                                nameError ||
+                                guestsError
+                            }>
                                 {status === "sending" ? "Ուղարկում ենք..." : "Հաստատել"}
                             </button>
                         </div>
