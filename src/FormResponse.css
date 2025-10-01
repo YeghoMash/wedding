@@ -351,3 +351,38 @@ input:-internal-autofill-selected:focus {
     box-shadow: 0 0 0 1000px rgba(255,255,255,0.06) inset !important;
     color: white;
 }
+
+/* Chrome, Safari, Edge (WebKit/Blink) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button,
+.input[type="number"]::-webkit-outer-spin-button,
+.input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+    display: none; /* дополнительная страховка */
+}
+
+/* Firefox */
+input[type="number"],
+.input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* Old Edge / IE (clear the dropdown/clear buttons) */
+input[type="number"]::-ms-clear,
+input[type="number"]::-ms-expand,
+.input[type="number"]::-ms-clear,
+.input[type="number"]::-ms-expand {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* Убедимся, что класс .input не возвращает спиннер через более специфичные правила */
+.input[type="number"] {
+    -webkit-appearance: textfield !important;
+    -moz-appearance: textfield !important;
+    appearance: textfield !important;
+}
+

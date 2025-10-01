@@ -3,7 +3,11 @@ import { motion } from "framer-motion";
 import "./index.css";
 import "./FormResponse.css";
 
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwIr_dfvSNCXuamzu1ieVzA3Swzee1jtFhgFF97hZwQXBVGeV-GQMgvJlgT0Qg77OWm/exec";
+/**
+ * ВАЖНО: вставьте сюда ваш Apps Script Web App URL.
+ * Если оставить пустым — компонент будет показывать ошибку и не попытается слать форму.
+ */
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwIr_dfvSNCXuamzu1ieVzA3Swzee1jtFhgFF97hZwQXBVGeV-GQMgvJlgT0Qg77OWm/exec"; // <-- put your Apps Script URL here
 const SECRET_TOKEN = "my_secret_12345";
 const MAX_GUESTS = 10;
 
@@ -24,13 +28,16 @@ export default function FormResponse() {
     const [attending, setAttending] = useState("yes");
     // guests храним как строку, чтобы не терять ввод пользователя
     const [guests, setGuests] = useState("1");
-    const [status, setStatus] = useState(null);
+    const [status, setStatus] = useState(null); // null | "sending" | "ok" | "error"
     const [formSubmitted, setFormSubmitted] = useState(false);
     const [nameError, setNameError] = useState(false);
     const [nameTouched, setNameTouched] = useState(false);
 
     const [guestsError, setGuestsError] = useState(false);
     const [guestsTouched, setGuestsTouched] = useState(false);
+
+    // текст ошибки для модалки (армянский / пояснение)
+    const [errorMessage, setErrorMessage] = useState("");
 
     const iframeRef = useRef(null);
     const formRef = useRef(null);
@@ -76,7 +83,6 @@ export default function FormResponse() {
         }
 
         if (n > MAX_GUESTS) {
-            // вот сообщение, которое вы хотели
             setGuestsError(`Առավելագույն հյուրերի քանակը — ${MAX_GUESTS}`);
             return false;
         }
@@ -98,17 +104,14 @@ export default function FormResponse() {
         validateName(name);
     };
 
-    // Не клэмпируем — сохраняем ровно то, что ввёл пользователь.
-    // Валидация запускается сразу (validateGuests), чтобы показывать ошибку без ожидания blur.
     const handleGuestsChange = (e) => {
         const v = e.target.value;
 
         // allow empty
         if (v === "") {
             setGuests("");
-            // показываем ошибку сразу, если уже touched
             if (guestsTouched) validateGuests("");
-            else validateGuests(""); // показываем сразу по требованию
+            else validateGuests("");
             return;
         }
 
@@ -137,7 +140,7 @@ export default function FormResponse() {
             setTimeout(() => {
                 const nameInput = document.querySelector('input[name="fullName"]');
                 if (nameInput) {
-                    nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    nameInput.scrollIntoView({ behavior: "smooth", block: "center" });
                     nameInput.focus();
                 }
             }, 100);
@@ -145,12 +148,12 @@ export default function FormResponse() {
         }
 
         if (!(side === "wife" || side === "groom")) {
-            alert("Խնդրում ենք ընտրել համապատասխան կողմից / Выберите, пожалуйста, сторону.");
+            alert("Խնդրում ենք ընտրել համապատասխան կողմից");
             return false;
         }
 
         if (!(attending === "yes" || attending === "no")) {
-            alert("Խնդրում ենք ընտրել՝ գալիս եք արդյոք / Пожалуйста, укажите, придёте ли вы.");
+            alert("Խնդրում ենք ընտրել՝ գալիս եք արդյոք");
             return false;
         }
 
@@ -158,7 +161,7 @@ export default function FormResponse() {
             setTimeout(() => {
                 const guestsInput = document.querySelector('input[aria-label="guests"]');
                 if (guestsInput) {
-                    guestsInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    guestsInput.scrollIntoView({ behavior: "smooth", block: "center" });
                     guestsInput.focus();
                 }
             }, 100);
@@ -169,13 +172,24 @@ export default function FormResponse() {
     }
 
     const handleSubmit = (e) => {
-        e.preventDefault();
+        // e может быть undefined при повторной отправке из модалки
+        e && e.preventDefault();
         setNameTouched(true);
         setGuestsTouched(true);
 
         if (!validate()) return;
 
+        // Проверяем наличие WEB_APP_URL
+        if (!WEB_APP_URL || WEB_APP_URL.trim() === "") {
+            setErrorMessage(
+                "Չհաջողվեց ուղարկել տվյալները խնդրում ենք կրկին փորձել։"
+            );
+            setStatus("error");
+            return;
+        }
+
         setStatus("sending");
+        setErrorMessage("");
 
         let iframe = iframeRef.current;
         if (!iframe) {
@@ -187,6 +201,7 @@ export default function FormResponse() {
             iframeRef.current = iframe;
         }
 
+        // заранее очищаем обработчик
         iframe.onload = null;
 
         let form = document.createElement("form");
@@ -217,6 +232,7 @@ export default function FormResponse() {
             setStatus("ok");
             setFormSubmitted(true);
 
+            // reset fields
             setName("");
             setSide("wife");
             setAttending("yes");
@@ -227,8 +243,13 @@ export default function FormResponse() {
             setGuestsTouched(false);
 
             setTimeout(() => {
-                try { form.remove(); } catch (_) {}
-                try { iframe.remove(); iframeRef.current = null; } catch (_) {}
+                try {
+                    form.remove();
+                } catch (_) {}
+                try {
+                    iframe.remove();
+                    iframeRef.current = null;
+                } catch (_) {}
             }, 500);
         };
 
@@ -238,23 +259,88 @@ export default function FormResponse() {
             form.submit();
         } catch (err) {
             console.error("form.submit error", err);
+            setErrorMessage("Չհաջողվեց ուղարկել տվյալները խնդրում ենք կրկին փորձել։");
             setStatus("error");
-            try { form.remove(); } catch (_) {}
-            try { iframe.remove(); iframeRef.current = null; } catch (_) {}
+            try {
+                form.remove();
+            } catch (_) {}
+            try {
+                iframe.remove();
+                iframeRef.current = null;
+            } catch (_) {}
             return;
         }
 
+        // если не получили ответ в течение 10 сек — показываем модальное об ошибке
         timeoutRef.current = setTimeout(() => {
             setStatus("error");
-            alert("Չհաջողվեց ուղարկել տվյալները — ստուգեք WEB_APP_URL, SECRET_TOKEN և Apps Script deployment settings.\n(Also check Apps Script logs.)");
-            try { form.remove(); } catch (_) {}
-            try { iframe.remove(); iframeRef.current = null; } catch (_) {}
+            setErrorMessage("Չհաջողվեց ուղարկել տվյալները խնդրում ենք կրկին փորձել։");
+            try {
+                form.remove();
+            } catch (_) {}
+            try {
+                iframe.remove();
+                iframeRef.current = null;
+            } catch (_) {}
         }, 10000);
     };
 
     return (
         <div>
             <div className="response-form">
+                {/* Error modal — показывается поверх формы, когда status === "error" */}
+                {status === "error" && (
+                    <motion.div
+                        className="modal-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{
+                            position: "fixed",
+                            inset: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            zIndex: 1100,
+                            backgroundColor: "rgba(0,0,0,0.45)",
+                        }}
+                        onClick={() => setStatus(null)}
+                    >
+                        <motion.div
+                            className="modal-card"
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                            style={{
+                                padding: 20,
+                                borderRadius: 12,
+                                boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+                                background: "white",
+                                maxWidth: 420,
+                                textAlign: "center",
+                            }}
+                            onClick={(ev) => ev.stopPropagation()}
+                        >
+                            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Խնդիր</div>
+                            <div style={{ marginBottom: 12 }}>
+                                {"Չհաջողվեց ուղարկել տվյալները խնդրում ենք կրկին փորձել։"}
+                            </div>
+
+                            <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => {
+                                        setStatus(null);
+                                        clearTimeout(timeoutRef.current);
+                                    }}
+                                >
+                                    Լավ
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+
                 {formSubmitted ? (
                     <motion.div
                         className="modal-overlay"
@@ -268,7 +354,7 @@ export default function FormResponse() {
                             alignItems: "center",
                             justifyContent: "center",
                             zIndex: 1000,
-                            backgroundColor: "rgba(100, 100, 100, 0.7)"
+                            backgroundColor: "rgba(100, 100, 100, 0.7)",
                         }}
                     >
                         <motion.div
@@ -282,29 +368,30 @@ export default function FormResponse() {
                                 boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
                                 background: "white",
                                 maxWidth: 420,
-                                textAlign: "center"
+                                textAlign: "center",
                             }}
                         >
                             <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Շնորհակալություն</div>
                             <div style={{ marginBottom: 16 }}>Ձեր պատասխանը հաջողությամբ ուղարկվել է.</div>
                             <div style={{ display: "flex", justifyContent: "center" }}>
-                                <button className="btn btn-primary" onClick={() => { setFormSubmitted(false); setStatus(null); }}>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => {
+                                        setFormSubmitted(false);
+                                        setStatus(null);
+                                    }}
+                                >
                                     Լավ
                                 </button>
                             </div>
                         </motion.div>
                     </motion.div>
                 ) : (
-                    <motion.form
-                        className="rsvp-form"
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        onSubmit={handleSubmit}
-                    >
+                    <motion.form className="rsvp-form" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} onSubmit={handleSubmit}>
                         <div className="form-row">
                             <label className="label">Անուն Ազգանուն</label>
                             <input
-                                className={`input ${nameError ? 'input-error' : ''}`}
+                                className={`input ${nameError ? "input-error" : ""}`}
                                 name="fullName"
                                 value={name}
                                 onChange={handleNameChange}
@@ -319,9 +406,9 @@ export default function FormResponse() {
                                     initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.2 }}
-                                    style={{ marginTop: 8, color: '#e74c3c', fontSize: '14px', display: 'flex', alignItems: 'center' }}
+                                    style={{ marginTop: 8, color: "#e74c3c", fontSize: "14px", display: "flex", alignItems: "center" }}
                                 >
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: "8px" }}>
                                         <path d="M12 8V12M12 16H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#e74c3c" strokeWidth="2" strokeLinecap="round" />
                                     </svg>
                                     {nameError}
@@ -333,22 +420,10 @@ export default function FormResponse() {
                             <label className="label">Ո՞ր կողմից եք</label>
                             <div className="radio-group" style={{ marginTop: 8 }}>
                                 <label className="radio">
-                                    <input
-                                        type="radio"
-                                        name="side"
-                                        checked={side === "wife"}
-                                        onChange={() => setSide("wife")}
-                                    />{' '}
-                                    {OPTION_TEXTS.side.wife}
+                                    <input type="radio" name="side" checked={side === "wife"} onChange={() => setSide("wife")} /> {OPTION_TEXTS.side.wife}
                                 </label>
                                 <label className="radio">
-                                    <input
-                                        type="radio"
-                                        name="side"
-                                        checked={side === "groom"}
-                                        onChange={() => setSide("groom")}
-                                    />{' '}
-                                    {OPTION_TEXTS.side.groom}
+                                    <input type="radio" name="side" checked={side === "groom"} onChange={() => setSide("groom")} /> {OPTION_TEXTS.side.groom}
                                 </label>
                             </div>
                         </div>
@@ -358,7 +433,7 @@ export default function FormResponse() {
                             <div className="radio-group">
                                 <label className="radio">
                                     <input
-                                        style={{color: "#000", backgroundColor: '#000'}}
+                                        style={{ color: "#000", backgroundColor: "#000" }}
                                         type="radio"
                                         name="attending"
                                         checked={attending === "yes"}
@@ -367,7 +442,7 @@ export default function FormResponse() {
                                             setGuests("1");
                                             setGuestsError(false);
                                         }}
-                                    />{' '}
+                                    />{" "}
                                     {OPTION_TEXTS.attending.yes}
                                 </label>
                                 <label className="radio">
@@ -380,48 +455,53 @@ export default function FormResponse() {
                                             setGuests("0");
                                             setGuestsError(false);
                                         }}
-                                    />{' '}
+                                    />{" "}
                                     {OPTION_TEXTS.attending.no}
                                 </label>
                             </div>
                         </div>
 
-                        {attending !== "no" &&
+                        {attending !== "no" && (
                             <div className="form-row">
                                 <label className="label">Հյուրերի թիվ</label>
                                 <input
-                                    className={`input ${guestsError ? 'input-error' : ''}`}
+                                    className={`input ${guestsError ? "input-error" : ""}`}
                                     type="number"
-                                    min={0}
+                                    inputMode="numeric"
+                                    pattern="\d*"
+                                    min={1}
                                     step={1}
-                                    // убран max={MAX_GUESTS} чтобы не было автоматического поведения со стороны браузера
                                     value={guests}
                                     onChange={handleGuestsChange}
                                     onBlur={handleGuestsBlur}
                                     disabled={attending !== "yes"}
                                     aria-label="guests"
                                 />
-                                {attending === 'yes' && guestsError && (
+                                {attending === "yes" && guestsError && (
                                     <motion.div
                                         className="error-text"
                                         initial={{ opacity: 0, y: -6 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.18 }}
-                                        style={{ marginTop: 8, color: '#e74c3c', fontSize: '14px' }}
+                                        style={{ marginTop: 8, color: "#e74c3c", fontSize: "14px" }}
                                     >
                                         {guestsError}
                                     </motion.div>
                                 )}
                             </div>
-                        }
+                        )}
 
                         <div className="actions">
-                            <button className="btn btn-primary" type="submit" disabled={
-                                status === "sending" ||
-                                (attending === 'yes' && (guests === '' || Number(guests) < 1)) ||
-                                nameError ||
-                                guestsError
-                            }>
+                            <button
+                                className="btn btn-primary"
+                                type="submit"
+                                disabled={
+                                    status === "sending" ||
+                                    (attending === "yes" && (guests === "" || Number(guests) < 1)) ||
+                                    nameError ||
+                                    guestsError
+                                }
+                            >
                                 {status === "sending" ? "Ուղարկում ենք..." : "Հաստատել"}
                             </button>
                         </div>
