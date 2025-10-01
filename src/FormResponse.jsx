@@ -254,7 +254,7 @@ export default function FormResponse() {
 
     return (
         <div>
-            <div>
+            <div className="response-form">
                 {formSubmitted ? (
                     <motion.div
                         className="modal-overlay"

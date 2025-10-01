@@ -1,4 +1,4 @@
-/* FormResponse.css */
+/* FormResponse.css (обновлённый) */
 
 .rsvp-root {
     display: flex;
@@ -6,30 +6,57 @@
     align-items: center;
     min-height: 100vh;
     padding: 20px;
+    /* оставляем фон страницы светлым — карточка будет показывать изображение внутри себя */
     background-color: #f8f9fa;
 }
 
+/* Карточка — полупрозрачная, с размытием заднего фона для лучшей читаемости */
 .rsvp-card {
-    background: white;
+    background: rgba(0, 0, 0, 0.30); /* тёмная полупрозрачная подложка */
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     padding: 30px;
     width: 100%;
     max-width: 700px;
+    color: #fff; /* текст в карточке белый */
+    border: 1px solid rgba(255,255,255,0.06);
 }
 
+/* Если хочешь светлую карточку (вместо тёмной) — используй этот вариант:
+.rsvp-card {
+    background: rgba(255,255,255,0.8);
+    color: #222;
+    backdrop-filter: blur(4px);
+}
+*/
+
+/* Важно: путь к картинке в public/ должен начинаться с / */
 .rsvp-form {
     display: flex;
     flex-direction: column;
     gap: 20px;
+
+    background-image: url('../public/image-8.webp'); /* <-- файл в public/image-2.webp */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+
+    /* padding внутри формы, чтобы картинка не "липла" к краям */
+    padding: 20px;
+    border-radius: 10px;
 }
 
+/* Радиокнопки */
 .radio input[type="radio"]{
     width:16px;
     height:16px;
-    accent-color: #000;
+    accent-color: #fff; /* белые радиокнопки в поддерживаемых браузерах */
 }
 
+/* Структура */
 .form-row {
     display: flex;
     flex-direction: column;
@@ -38,29 +65,48 @@
 .label {
     font-weight: 600;
     margin-bottom: 8px;
-    color: #333;
+    color: rgba(255,255,255,0.92);
     font-size: 16px;
 }
 
-.input {
+/* Поля ввода — полупрозрачные над картинкой */
+.input,
+select,
+textarea {
+    background: rgba(255,255,255,0.06); /* слегка светлая подложка для читаемости */
+    border: 1px solid rgba(255,255,255,0.16);
+    color: #fff;
     padding: 12px 16px;
-    border: 1px solid #ddd;
     border-radius: 8px;
     font-size: 16px;
-    transition: all 0.2s ease;
+    transition: all 0.18s ease;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.input:focus {
+/* Placeholder */
+.input::placeholder,
+textarea::placeholder {
+    color: rgba(255,255,255,0.7);
+}
+
+/* Фокус — более заметная рамка */
+.input:focus,
+select:focus,
+textarea:focus {
     outline: none;
-    border-color: #000000;
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255,255,255,0.95);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35), 0 0 0 6px rgba(255,255,255,0.03);
 }
 
+/* Ошибка */
 .input-error {
-    border-color: #e74c3c;
-    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
+    border-color: rgba(231, 76, 60, 0.9);
+    box-shadow: 0 0 0 4px rgba(231,76,60,0.08);
+    background: rgba(231,76,60,0.03);
 }
 
+/* Радиогруппа и элементы */
 .radio-group {
     display: flex;
     flex-direction: column;
@@ -72,12 +118,10 @@
     align-items: center;
     gap: 8px;
     cursor: pointer;
+    color: rgba(255,255,255,0.95);
 }
 
-.radio input[type="radio"] {
-    margin: 0;
-}
-
+/* Кнопки */
 .actions {
     display: flex;
     justify-content: center;
@@ -95,12 +139,13 @@
 }
 
 .btn-primary {
-    background-color: #000000;
-    color: white;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.12);
 }
 
 .btn-primary:hover:not(:disabled) {
-    background-color: #000000;
+    filter: brightness(1.05);
 }
 
 .btn-primary:disabled {
@@ -108,14 +153,16 @@
     cursor: not-allowed;
 }
 
+/* Ошибки/подписи */
 .error-text {
-    color: #e74c3c;
+    color: #ffb3b3;
     font-size: 14px;
     margin-top: 8px;
     display: flex;
     align-items: center;
 }
 
+/* Модал */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -134,4 +181,173 @@
     background: white;
     max-width: 420px;
     text-align: center;
+}
+
+/* Поддержка автозаполнения в Chrome (чтобы не заливало фон) */
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px rgba(255,255,255,0.06) inset !important;
+    -webkit-text-fill-color: #fff !important;
+}
+
+/* ------------- Альтернатива: полностью прозрачные поля ------------- */
+/*
+.input,
+select,
+textarea {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #fff;
+}
+.input.no-border {
+  border: none;
+  box-shadow: none;
+}
+*/
+
+/* ---------- Blurred / transparent custom radios (add to bottom of FormResponse.css) ---------- */
+
+/* Скрываем нативный инпут (оставляя его доступным для клавиатуры/скринридеров) */
+.radio input[type="radio"] {
+    position: absolute;      /* убрать из потока */
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    overflow: hidden;
+    white-space: nowrap;
+    opacity: 0;
+}
+
+/* Обёртка-лейбл (у тебя .radio) — сделаем position:relative чтобы позиционировать псевдо) */
+.radio {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    color: rgba(255,255,255,0.95);
+}
+
+/* Видимый кружок — используем ::before (или добавь <span class="radio-faux"> если предпочитаешь HTML) */
+.radio::before {
+    content: "";
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    flex: 0 0 18px;
+    background: rgba(255,255,255,0.08);            /* полупрозрачная подложка */
+    border: 1px solid rgba(255,255,255,0.16);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    transition: all 160ms ease;
+    position: relative;
+}
+
+/* Внутренний заполненный кружок для checked */
+.radio::after {
+    content: "";
+    position: absolute;
+    left: 6px; /* выровнять внутри ::before */
+    top: 7px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.95);
+    transform: scale(0);
+    transition: transform 140ms cubic-bezier(.2,.9,.2,1);
+    pointer-events: none;
+}
+
+/* Показать точку, когда input внутри .radio отмечен */
+/* используем селектор: .radio input:checked + ??? — но у нас input скрыт, псевдоэлементы на .radio */
+/* поэтому применяем правило через :has() если поддерживается, иначе делаем небольшую альтернативу ниже */
+
+/* Preferred (modern browsers that support :has) */
+.radio:has(input[type="radio"]:checked)::after {
+    transform: scale(1);
+}
+
+/* Fallback for browsers without :has: add a utility class "is-checked" to label via JS on change.
+   Example small JS (optional, if you need full fallback):
+   document.querySelectorAll('.radio input[type="radio"]').forEach(r=>{
+     r.addEventListener('change', e=>{
+       document.querySelectorAll('.radio').forEach(l=>l.classList.remove('is-checked'));
+       const lab = e.target.closest('.radio');
+       if(lab) lab.classList.add('is-checked');
+     });
+   });
+   And then use .radio.is-checked::after { transform: scale(1); }
+*/
+
+/* hover & focus states */
+.radio:hover::before {
+    border-color: rgba(255,255,255,0.26);
+}
+.radio input[type="radio"]:focus + * , /* if using span after input */
+.radio:focus-within::before {
+    box-shadow: 0 0 0 6px rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.95);
+}
+
+/* Disabled state */
+.radio input[type="radio"]:disabled + * , .radio input[type="radio"]:disabled ~ * {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Если хочешь белые точки при checked, оставь; для другого цвета меняй background у .radio::after */
+
+/* Option: если используешь HTML variant (input + span.radio-faux), можно вместо ::before/::after — тогда селектор
+   .radio input:checked + .radio-faux::after будет работать везде без :has. */
+
+
+/* ---------- Override browser autofill (Chrome / Edge / Safari) ---------- */
+/* Обработать все состояния: normal, hover, focus, active */
+.input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill,
+.input:-webkit-autofill:hover,
+textarea:-webkit-autofill:hover,
+select:-webkit-autofill:hover,
+.input:-webkit-autofill:focus,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill:focus,
+.input:-webkit-autofill:active,
+textarea:-webkit-autofill:active,
+select:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px rgba(255,255,255,0.06) inset !important; /* перекрыть фон браузера */
+    box-shadow: 0 0 0 1000px rgba(255,255,255,0.06) inset !important;
+    -webkit-text-fill-color: #fff !important;   /* цвет текста после автозаполнения */
+    caret-color: #fff !important;
+    background-clip: padding-box !important;
+    transition: background-color 5000s ease-in-out 0s !important; /* предотвращает мигание у Chrome */
+    color: white;
+}
+
+/* Уточнение — если вы используете .input как класс (рекомендую) */
+.input.is-autofilled {
+    background: rgba(255,255,255,0.06) !important;
+    border-color: rgba(255,255,255,0.16) !important;
+    -webkit-text-fill-color: #fff !important;
+    color: white;
+}
+
+/* Firefox: иногда помогает правило для :-moz-placeholder и общие стили */
+.input:-moz-placeholder,
+textarea:-moz-placeholder { color: rgba(255,255,255,0.7); }
+
+/* На всякий случай — если у браузера есть internal селектор (редко), перекроем общим правилом */
+input:-internal-autofill-selected,
+input:-internal-autofill-selected:focus {
+    -webkit-box-shadow: 0 0 0 1000px rgba(255,255,255,0.06) inset !important;
+    box-shadow: 0 0 0 1000px rgba(255,255,255,0.06) inset !important;
+    color: white;
 }

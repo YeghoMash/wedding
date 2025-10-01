@@ -466,8 +466,8 @@ export default function App() {
                         exit={{ opacity: 0, x: 80 }}
                         transition={{ duration: 2 }}
                         viewport={{ once: true, amount: 0.2 }}
-                    >Զովունի 1 փ, 242/6</motion.h2>
-                    <MapLinkButton placeId="ChIJz8RLwryZakARCA2KQYnRmIU" label="Ինչպես հասնել"></MapLinkButton>
+                    >Դավթաշեն 2-րդ թաղամաս, 13/47</motion.h2>
+                    <MapLinkButton lat={40.228214} lng={44.490654} placeId="" label="Ինչպես հասնել"></MapLinkButton>
                     <motion.img
                         className="program-icon rings-icon"
                         initial={{ opacity: 0, y: 80 }}
@@ -594,7 +594,7 @@ export default function App() {
     );
 }
 
-const HARDCODED_TARGET = new Date(2025, 9, 19, 16, 0, 0);
+const HARDCODED_TARGET = new Date(2025, 9, 19, 11, 0, 0);
 
 function CountdownTimer() {
     const [target] = useState(HARDCODED_TARGET);
