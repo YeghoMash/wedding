@@ -516,7 +516,7 @@ export default function App() {
                         exit={{ opacity: 0, x: 80 }}
                         transition={{ duration: 2 }}
                         viewport={{ once: true, amount: 0.2 }}
-                    >Փեսաի տուն</motion.h2>
+                    >Փեսայի տուն</motion.h2>
                     <motion.h2 className="program-time"
                         initial={{ opacity: 0, x: -80 }}
                         whileInView={{ opacity: 1, x: 0 }}
