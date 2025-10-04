@@ -720,7 +720,7 @@ function CountdownTimer() {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: 40 }}
                                 transition={{ duration: 1 }}
-                                viewport={{ once: true, amount: 0.2 }}>Վարկյան</motion.div>
+                                viewport={{ once: true, amount: 0.2 }}>Վայրկյան</motion.div>
                         </div>
                     </>
                 )}
