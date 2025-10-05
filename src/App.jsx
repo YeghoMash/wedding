@@ -631,12 +631,6 @@ function CountdownTimer() {
     return (
         <div className="countdown-container">
             <div className="countdown-grid">
-                {remaining == null ? (
-                    <div>Цель не установлена</div>
-                ) : remaining.finished ? (
-                    <div className="countdown-finished">Событие наступило</div>
-                ) : (
-                    <>
                         <div className="countdown-item">
                             <motion.div className="countdown-value"
                                 initial={{ opacity: 0, y: -40 }}
@@ -722,8 +716,6 @@ function CountdownTimer() {
                                 transition={{ duration: 1 }}
                                 viewport={{ once: true, amount: 0.2 }}>Վայրկյան</motion.div>
                         </div>
-                    </>
-                )}
             </div>
         </div>
     );
