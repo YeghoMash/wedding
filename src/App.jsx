@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import "./index.css";
 import "./PlayButton.css"
 import musicUrl from "../public/wedding-music.mp3";
-
 import FormResonse from "./FormResponse.jsx";
 
 function roundEven(n) {
@@ -466,8 +465,8 @@ export default function App() {
                         exit={{ opacity: 0, x: 80 }}
                         transition={{ duration: 2 }}
                         viewport={{ once: true, amount: 0.2 }}
-                    >Դավթաշեն 2-րդ թաղամաս, 13/47</motion.h2>
-                    <MapLinkButton lat={40.228214} lng={44.490654} placeId="" label="Ինչպես հասնել"></MapLinkButton>
+                    >փ. Ղափանցյան, 43/22</motion.h2>
+                    <MapLinkButton placeId="ChIJD4ZURFm9akAR1Xz5tPFxAW0" label="Ինչպես հասնել"></MapLinkButton>
                     <motion.img
                         className="program-icon rings-icon"
                         initial={{ opacity: 0, y: 80 }}
@@ -594,7 +593,7 @@ export default function App() {
     );
 }
 
-const HARDCODED_TARGET = new Date(2025, 9, 19, 11, 0, 0);
+const HARDCODED_TARGET = new Date(2025, 9 , 19, 11, 0, 0);
 
 function CountdownTimer() {
     const [target] = useState(HARDCODED_TARGET);
