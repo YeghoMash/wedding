@@ -465,7 +465,7 @@ export default function App() {
                         exit={{ opacity: 0, x: 80 }}
                         transition={{ duration: 2 }}
                         viewport={{ once: true, amount: 0.2 }}
-                    >փ. Ղափանցյան, 43/22</motion.h2>
+                    >Ք. Երևան <br/> փ. Ղափանցյան, 43/22</motion.h2>
                     <MapLinkButton placeId="ChIJD4ZURFm9akAR1Xz5tPFxAW0" label="Ինչպես հասնել"></MapLinkButton>
                     <motion.img
                         className="program-icon rings-icon"
